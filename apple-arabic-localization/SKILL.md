@@ -1,6 +1,6 @@
 ---
 name: apple-arabic-localization
-description: Use when localizing Apple-platform apps between Arabic and English, reviewing RTL/LTR behavior, extracting visible strings into localization files, wiring in-app language switching, or preparing Arabic App Store copy for Xcode-based apps.
+description: Use when localizing Apple-platform apps between Arabic and English, reviewing Arabic RTL/LTR behavior, extracting visible strings into Localizable.strings or .xcstrings, wiring in-app language switching, or preparing Arabic App Store copy for SwiftUI/UIKit Xcode-based apps.
 ---
 
 # Apple Arabic Localization

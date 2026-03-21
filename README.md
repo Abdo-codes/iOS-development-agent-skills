@@ -1,8 +1,10 @@
 # iOS Dev Skills
 
-Reusable Codex skills for iOS app development workflows.
+Reusable agent skills for iOS app development workflows.
 
-This repository is meant to hold shareable skills that improve common Apple-platform engineering tasks such as localization, RTL review, release preparation, testing, and product copy.
+Skills that improve common Apple-platform engineering tasks such as localization, RTL review, release preparation, testing, and product copy.
+
+Compatible with [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.sh), [Codex](https://openai.com/codex), and [40+ other coding agents](https://skills.sh) via [skills.sh](https://skills.sh).
 
 ## Included Skills
 
@@ -12,65 +14,55 @@ Use this skill when localizing Apple-platform apps between Arabic and English, r
 
 Included references:
 
-- `references/apple-localization-checklist.md`
-- `references/rtl-review.md`
-- `references/copy-guidelines.md`
+- `references/apple-localization-checklist.md` — end-to-end implementation checklist
+- `references/rtl-review.md` — Arabic/LTR visual and semantic review
+- `references/copy-guidelines.md` — Arabic/English product copy and store copy rules
+
+## Install
+
+### Via skills.sh (recommended)
+
+Install all skills to your current project:
+
+```bash
+npx skills add Abdo-codes/iOS-dev-skills
+```
+
+Install only the Arabic localization skill:
+
+```bash
+npx skills add Abdo-codes/iOS-dev-skills --skill apple-arabic-localization
+```
+
+Install globally (available in all projects):
+
+```bash
+npx skills add Abdo-codes/iOS-dev-skills -g
+```
+
+### Manual
+
+Copy the skill folder into your agent's skills directory:
+
+```bash
+# Claude Code
+cp -R apple-arabic-localization .claude/skills/
+
+# Cursor / Codex / other agents
+cp -R apple-arabic-localization .agents/skills/
+```
 
 ## Repository Layout
 
 ```text
 iOS-dev-skills/
   apple-arabic-localization/
-    SKILL.md
+    SKILL.md                          # Skill definition (frontmatter + instructions)
     references/
+      apple-localization-checklist.md # Implementation checklist
+      rtl-review.md                   # RTL visual review guide
+      copy-guidelines.md              # Arabic/English copy rules
 ```
-
-## Using A Skill
-
-Copy the skill folder into your Codex skills directory.
-
-Common locations:
-
-- `~/.agents/skills/`
-- `skills/` inside a project repo
-
-Example:
-
-```bash
-cp -R apple-arabic-localization ~/.agents/skills/
-```
-
-After that, start a new Codex session if your skill inventory is cached.
-
-## Install Via skills.sh
-
-Install the whole repository:
-
-```bash
-npx skills add Abdo-codes/iOS-development-agent-skills
-```
-
-Install only the Arabic localization skill:
-
-```bash
-npx skills add https://github.com/Abdo-codes/iOS-development-agent-skills --skill apple-arabic-localization
-```
-
-## Use With Claude
-
-This skill format is compatible with Claude as well.
-
-### Claude.ai
-
-1. Download or clone this repository.
-2. Zip the `apple-arabic-localization/` folder if needed.
-3. In Claude.ai, open `Settings` -> `Capabilities` -> `Skills`.
-4. Upload the skill folder or zip.
-5. Enable the skill for your workspace or account.
-
-### Claude Code
-
-Anthropic documents the same skill format as portable across Claude.ai and Claude Code. You can use the `apple-arabic-localization/` folder as a Claude-compatible skill and place it in your Claude Code skills directory, depending on your setup.
 
 ## Trigger Examples
 
@@ -78,6 +70,7 @@ Anthropic documents the same skill format as portable across Claude.ai and Claud
 - "Review all RTL issues in this iOS app."
 - "Add in-app language switching for this Xcode project."
 - "Move all visible app strings into localization files."
+- "Prepare Arabic App Store copy for this app."
 
 ## Scope
 
