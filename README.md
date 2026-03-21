@@ -42,6 +42,20 @@ cp -R apple-arabic-localization ~/.agents/skills/
 
 After that, start a new Codex session if your skill inventory is cached.
 
+## Install Via skills.sh
+
+Install the whole repository:
+
+```bash
+npx skills add Abdo-codes/iOS-dev-skills
+```
+
+Install only the Arabic localization skill:
+
+```bash
+npx skills add https://github.com/Abdo-codes/iOS-dev-skills --skill apple-arabic-localization
+```
+
 ## Trigger Examples
 
 - "Localize this SwiftUI app to Arabic and English."
