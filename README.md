@@ -47,14 +47,30 @@ After that, start a new Codex session if your skill inventory is cached.
 Install the whole repository:
 
 ```bash
-npx skills add Abdo-codes/iOS-dev-skills
+npx skills add Abdo-codes/iOS-development-agent-skills
 ```
 
 Install only the Arabic localization skill:
 
 ```bash
-npx skills add https://github.com/Abdo-codes/iOS-dev-skills --skill apple-arabic-localization
+npx skills add https://github.com/Abdo-codes/iOS-development-agent-skills --skill apple-arabic-localization
 ```
+
+## Use With Claude
+
+This skill format is compatible with Claude as well.
+
+### Claude.ai
+
+1. Download or clone this repository.
+2. Zip the `apple-arabic-localization/` folder if needed.
+3. In Claude.ai, open `Settings` -> `Capabilities` -> `Skills`.
+4. Upload the skill folder or zip.
+5. Enable the skill for your workspace or account.
+
+### Claude Code
+
+Anthropic documents the same skill format as portable across Claude.ai and Claude Code. You can use the `apple-arabic-localization/` folder as a Claude-compatible skill and place it in your Claude Code skills directory, depending on your setup.
 
 ## Trigger Examples
 
