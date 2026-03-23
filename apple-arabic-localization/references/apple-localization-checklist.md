@@ -4,23 +4,17 @@ Use this checklist when implementing or reviewing Arabic/English localization in
 
 ## 1. Audit
 
-Search for these patterns first:
+Run `scripts/audit-localization.sh <repo-path>` first. It searches for:
 
-- `Locale(identifier: "ar")`
-- `Locale(identifier: "ar_SA")`
-- `.rightToLeft`
-- `.leftToRight`
-- raw visible strings in Swift files
-- notification title/body text
-- seeded user-facing content
-- custom number/date formatting helpers
+- Hard-coded `Locale(identifier:)` and `layoutDirection` assignments
+- Raw visible strings in Swift files (not localized)
+- Notification and reminder copy
+- Custom date/number formatters that may ignore the active locale
+- Directional hardcoding (`.left`/`.right` instead of `.leading`/`.trailing`)
+- Seeded or placeholder user-facing data
+- Existing localization files
 
-Good search starters:
-
-```bash
-rg -n 'Locale\\(|rightToLeft|leftToRight|Text\\("|TextField\\("|navigationTitle\\("' <repo>
-rg -n 'UNMutableNotificationContent|scheduleNotification|reminder|seed' <repo>
-```
+Review the audit output before proceeding. Then manually check for anything the script misses: reducer-generated text, cached summaries, and tab labels built at startup.
 
 ## 2. Source Of Truth
 

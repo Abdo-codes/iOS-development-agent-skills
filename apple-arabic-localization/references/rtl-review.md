@@ -17,11 +17,14 @@ Arabic localization must be reviewed as an RTL product state, not just translate
 - Avoid baking in “left means back” assumptions
 - Recheck any custom back/next buttons, disclosure rows, and carousel controls in both locales
 
-## Mixed Content
+## Mixed Content And Bidirectional Text
 
 - Check sign placement, units, and short values with real data
 - Negative amounts, percentages, and compact summaries should read naturally in each locale
 - Dates and times should follow the active language conventions consistently
+- When a localized string starts with a variable (e.g., a user name), insert `\u{200F}` (RLM) before the variable in Arabic strings or `\u{200E}` (LRM) in English strings to prevent direction inheritance
+- Wrap phone numbers and numeric IDs in Arabic text with `\u{202A}` (LRE) and `\u{202C}` (PDF) to preserve LTR display
+- Arabic digits (٠١٢) will break server-side parsing — use `Locale(identifier: "en")` for any formatter feeding APIs or storage
 
 ## Forms
 

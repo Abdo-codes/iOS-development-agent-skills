@@ -1,6 +1,6 @@
 ---
 name: apple-arabic-localization
-description: Use when localizing Apple-platform apps between Arabic and English, reviewing Arabic RTL/LTR behavior, extracting visible strings into Localizable.strings or .xcstrings, wiring in-app language switching, or preparing Arabic App Store copy for SwiftUI/UIKit Xcode-based apps.
+description: Use when localizing Apple-platform apps between Arabic and English, reviewing Arabic RTL/LTR behavior, extracting visible strings into Localizable.strings or .xcstrings, wiring in-app language switching, preparing Arabic App Store copy, or when the user mentions "RTL", "Arabic layout", "localize", "xcstrings", or "language switch" for SwiftUI/UIKit Xcode-based apps.
 ---
 
 # Apple Arabic Localization
@@ -11,11 +11,12 @@ Use this skill for Apple app localization work that goes beyond translating stri
 
 This skill is for Xcode-based Apple apps only: SwiftUI, UIKit, app extensions, and App Store metadata for iOS/iPadOS/macOS apps.
 
-Read only the reference file you need:
+## Available Resources
 
-- `references/apple-localization-checklist.md` for the end-to-end implementation checklist
-- `references/rtl-review.md` for Arabic/LTR visual and semantic review
-- `references/copy-guidelines.md` for Arabic/English product copy and store copy rules
+- `scripts/audit-localization.sh <repo-path>` — run first to find hard-coded locales, raw strings, notification copy, custom formatters, and directional hardcoding. Produces a structured report.
+- `references/apple-localization-checklist.md` — end-to-end implementation checklist
+- `references/rtl-review.md` — Arabic/LTR visual and semantic review
+- `references/copy-guidelines.md` — Arabic/English product copy and store copy rules
 
 ## When To Use
 
@@ -30,54 +31,75 @@ Do not use this skill for Android-only or web-only localization work.
 
 ## Core Workflow
 
-1. Audit the current localization architecture.
-   Search for hard-coded locale, layout direction, raw UI strings, custom formatters, notification copy, seeded user-facing data, and App Store text.
+1. **Audit first.**
+   Run `scripts/audit-localization.sh <repo-path>` to get a structured report of issues. Then search for anything the script missed: seeded data in reducers, cached summaries, tab labels built at startup.
 
-2. Pick a single source of truth for language.
-   Use one persisted app-language model to drive bundle lookup, `Locale`, `layoutDirection`, date formatting, number formatting, and any language-specific alignment behavior.
+2. **Pick a single source of truth for language.**
+   One persisted app-language model drives bundle lookup, `Locale`, `layoutDirection`, date formatting, number formatting, and any language-specific alignment. Avoid partial solutions where strings use one source and formatting uses another.
 
-3. Extract visible strings.
-   Move production-facing strings into the existing localization system. In Apple apps this is usually `Localizable.strings` or `.xcstrings`. Include views, reducers, notifications, seeded copy, errors, settings rows, and paywall/store messaging.
+3. **Extract visible strings.**
+   Move production-facing strings into the existing localization system (usually `Localizable.strings` or `.xcstrings`). Include views, reducers, notifications, seeded copy, errors, settings rows, and paywall/store messaging.
 
-4. Wire the app root correctly.
-   Inject the active `Locale`, `Calendar`, and `layoutDirection` from the chosen language source. Prefer semantic layout and icons over hard-coded left/right behavior.
+4. **Wire the app root correctly.**
+   Inject the active `Locale`, `Calendar`, and `layoutDirection` from the chosen language source. The root must react immediately to in-app language switches without requiring relaunch.
 
-5. Refresh derived localized data on language change.
-   Anything computed before the switch may need reload or recomputation. Common misses are chart labels, seeded schedules, reminder text, cached summaries, and tab labels created before the language changed.
+5. **Refresh derived localized data on language change.**
+   Anything computed before the switch may need reload. Common misses: chart labels, seeded schedules, reminder text, cached summaries, tab labels created before the language changed.
 
-6. Review Arabic and English as separate UX states.
-   Arabic needs a clean RTL pass. English needs a clean LTR pass. Fix both. Do not assume that making Arabic work preserves English.
+6. **Review Arabic and English as separate UX states.**
+   Arabic needs a clean RTL pass. English needs a clean LTR pass. Fix both. Do not assume making Arabic work preserves English.
 
-7. Verify with focused tests and visual checks.
-   Add tests for formatting helpers, persistence, reducer actions, and reload behavior. Then do visual passes in Arabic and English for navigation, sheets, forms, lists, tabs, and dates/numbers.
+7. **Verify with focused tests and visual checks.**
+   Add tests for formatting helpers, persistence, reducer actions, and reload behavior. Do visual passes in both locales for navigation, sheets, forms, lists, tabs, and dates/numbers.
+
+## Gotchas
+
+These are the failure modes that keep recurring. Check every one before shipping.
+
+**Forcing Arabic globally breaks English.**
+The most common mistake: setting `Locale("ar")` or `.rightToLeft` at the app root to "fix Arabic." This makes Arabic work but silently breaks English — English numbers become Hindi digits, dates become Hijri, and LTR layout is gone. Always derive locale behavior from the user's active language choice, never hard-code it.
+
+**Language switch updates strings but not locale behavior.**
+Strings change to English, but `DateFormatter` still uses Arabic digits, or the calendar stays Hijri. The source of truth must drive both string lookup AND formatting locale. One without the other creates a half-translated app.
+
+**Stale cached content after language switch.**
+Tab labels, chart month names, seeded tips, scheduled notification text — anything computed at startup stays in the old language after switching. Each of these must re-derive from the new locale. This is the hardest bug to find because it only appears after a switch, not on a fresh launch.
+
+**RTL fixes regress English.**
+Flipping icons, swapping padding, or changing alignment to fix Arabic often breaks the same screen in English. Every RTL change needs a matching LTR check. Common victims: custom back buttons, disclosure indicators, sign placement in financial amounts, and carousel/swipe controls.
+
+**`.environment(\.layoutDirection, .rightToLeft)` applied at the wrong level.**
+Applied at the root, this force-flips everything including system controls that already handle RTL correctly, causing double-flipping. Apply it only where actually needed, or better, let the system derive it from the active locale.
+
+**Notification and reminder copy is never localized.**
+Engineers localize views but forget `UNMutableNotificationContent` titles and bodies, reminder strings in reducers, and widget timeline entries. These are user-facing strings that need localization resources too.
+
+**`DateFormatter()` without explicit locale inherits the system locale, not the app locale.**
+If the user sets their device to English but uses the app in Arabic (or vice versa), `DateFormatter()` will format dates in the wrong language. Always set `.locale` on formatters to match the app's active language.
+
+**Bidirectional text breaks when a localized string starts with a variable.**
+If a string like `"\(userName) liked your post"` starts with a variable, the entire string inherits the variable's text direction. An English name in an Arabic string will flip the whole line to LTR. Fix: insert a Right-to-Left Mark (`\u{200F}`) before the variable for Arabic strings, or a Left-to-Right Mark (`\u{200E}`) for English strings. Same applies to phone numbers and numeric IDs embedded in Arabic text — wrap them with LRE (`\u{202A}`) and PDF (`\u{202C}`) to preserve their LTR display.
+
+**Images and custom icons don't auto-flip for RTL.**
+SF Symbols with semantic names (`chevron.forward`) flip automatically, but custom images, asset catalog icons, and any `UIImage` do not. You must explicitly set `imageFlipsForRightToLeftLayoutDirection = true` on UIKit images, or apply `.flipsForRightToLeftLayoutDirection` in SwiftUI, but only for directional images (arrows, progress indicators) — not for logos or photos.
+
+**Arabic digits (٠١٢٣) vs. Western digits (0123) cause silent data bugs.**
+When the device or app locale is Arabic, `NumberFormatter` may output Hindi-Arabic numerals (٠١٢٣٤). If these are sent to a server or used in calculations, they silently break parsing. Always use `Locale(identifier: "en")` for any formatter whose output feeds into APIs, storage, or arithmetic — and the app's active locale only for display.
 
 ## Non-Negotiable Rules
 
 - Never hard-code Arabic locale or RTL at the app root.
-- If the product says “English,” that means full English conventions unless explicitly stated otherwise: LTR, English numerals, and English date formatting.
+- "English" means full English conventions: LTR, English numerals, and English date formatting — unless explicitly stated otherwise.
 - Translating strings alone is not enough; cached localized content must refresh after language changes.
-- Localize notifications and seeded user-facing data, not just SwiftUI/UIKit views.
-- Prefer semantic APIs like `leading`/`trailing` and `chevron.forward`/`chevron.backward` over `left`/`right`.
+- Localize notifications and seeded user-facing data, not just views.
 - Preserve stable accessibility identifiers across locales.
 
-## Apple-Specific Checks
+## Deliverables
 
-- Use the repo’s existing localization format rather than introducing a new one unless required.
-- Check app entry points for forced `.locale`, `.layoutDirection`, or custom formatters that ignore the active language.
-- Review reducers and seed data, not just views. Apple apps often generate user-facing text outside UI files.
-- If the repo has a long-running preview renderer or snapshot host test, do not treat plain `xcodebuild test` as the only verification path. Use focused test commands when needed.
-
-## Required Deliverables
+Adapt to what the task actually requires — not every task needs all of these:
 
 - Updated localization resources for Arabic and English
 - A single active-language source of truth wired into the app
-- Localized formatting behavior for digits, dates, and currency where appropriate
+- Localized formatting behavior for digits, dates, and currency
 - A short list of remaining localization debt, if any
-- Exact verification commands used
-
-## Lessons To Preserve
-
-- Today’s common failure mode: fixing Arabic by forcing Arabic globally. That breaks English later.
-- Another common failure mode: switching strings without switching locale behavior.
-- Another common failure mode: language switch works for chrome but stale summaries, reminders, or seeded content stay in the old language.
-- Another common failure mode: RTL fixes regress English because arrows, sign placement, and alignment were not reviewed in LTR.
+- Verification commands or test results showing both locales work
