@@ -10,12 +10,13 @@ Compatible with [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [
 
 ### `apple-arabic-localization`
 
-Use this skill when localizing Apple-platform apps between Arabic and English, reviewing RTL and LTR behavior, extracting visible strings into localization resources, wiring in-app language switching, or preparing Arabic App Store copy for Xcode-based apps.
+Use this skill when localizing Apple-platform apps between Arabic and English, reviewing RTL and LTR behavior, running EN/AR simulator audits, extracting visible strings into localization resources, wiring in-app language switching, or preparing Arabic App Store copy for Xcode-based apps.
 
 Included references:
 
 - `references/apple-localization-checklist.md` — end-to-end implementation checklist
-- `references/rtl-review.md` — Arabic/LTR visual and semantic review
+- `references/rtl-review.md` — Arabic/LTR visual audit and remediation flow
+- `references/apple-rtl-principles.md` — Apple-authored RTL rules and mirroring guidance
 - `references/copy-guidelines.md` — Arabic/English product copy and store copy rules
 
 ## Install
@@ -68,6 +69,7 @@ iOS-dev-skills/
 
 - "Localize this SwiftUI app to Arabic and English."
 - "Review all RTL issues in this iOS app."
+- "Run an English and Arabic RTL audit on this SwiftUI app."
 - "Add in-app language switching for this Xcode project."
 - "Move all visible app strings into localization files."
 - "Prepare Arabic App Store copy for this app."
