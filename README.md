@@ -19,6 +19,16 @@ Included references:
 - `references/apple-rtl-principles.md` — Apple-authored RTL rules and mirroring guidance
 - `references/copy-guidelines.md` — Arabic/English product copy and store copy rules
 
+### `app-store-review-preflight`
+
+Use this skill before submitting an Apple-platform app to App Review, auditing release readiness, checking metadata, privacy policy links, permission purpose strings, StoreKit or subscription copy, in-app purchase review risk, placeholders, debug UI, and reviewer access.
+
+Included references:
+
+- `references/review-checklist.md` — App Review readiness checklist
+- `references/privacy-strings.md` — privacy, permissions, and purpose string checks
+- `references/storekit-paywall-review.md` — StoreKit, paywall, and subscription review checks
+
 ## Install
 
 ### Via skills.sh (recommended)
@@ -35,6 +45,12 @@ Install only the Arabic localization skill:
 npx skills add Abdo-codes/iOS-dev-skills --skill apple-arabic-localization
 ```
 
+Install only the App Store review preflight skill:
+
+```bash
+npx skills add Abdo-codes/iOS-dev-skills --skill app-store-review-preflight
+```
+
 Install globally (available in all projects):
 
 ```bash
@@ -48,9 +64,11 @@ Copy the skill folder into your agent's skills directory:
 ```bash
 # Claude Code
 cp -R apple-arabic-localization .claude/skills/
+cp -R app-store-review-preflight .claude/skills/
 
 # Cursor / Codex / other agents
 cp -R apple-arabic-localization .agents/skills/
+cp -R app-store-review-preflight .agents/skills/
 ```
 
 ## Repository Layout
@@ -63,10 +81,22 @@ iOS-dev-skills/
       apple-localization-checklist.md # Implementation checklist
       rtl-review.md                   # RTL visual review guide
       copy-guidelines.md              # Arabic/English copy rules
+  app-store-review-preflight/
+    SKILL.md                          # App Review preflight workflow
+    scripts/
+      audit-app-store-preflight.sh    # Static preflight audit helper
+    references/
+      review-checklist.md             # App Review readiness checklist
+      privacy-strings.md              # Privacy and permission checks
+      storekit-paywall-review.md      # StoreKit and paywall checks
 ```
 
 ## Trigger Examples
 
+- "Run an App Store review preflight on this iOS app."
+- "Check this app for App Review rejection risks."
+- "Audit Info.plist permission strings before release."
+- "Review this StoreKit paywall before App Store submission."
 - "Localize this SwiftUI app to Arabic and English."
 - "Review all RTL issues in this iOS app."
 - "Run an English and Arabic RTL audit on this SwiftUI app."
