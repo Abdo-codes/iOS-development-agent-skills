@@ -18,6 +18,7 @@ Included references:
 - `references/rtl-review.md` — Arabic/LTR visual audit and remediation flow
 - `references/apple-rtl-principles.md` — Apple-authored RTL rules and mirroring guidance
 - `references/copy-guidelines.md` — Arabic/English product copy and store copy rules
+- `references/parity-checker-examples.md` — examples for localization parity findings
 
 ## Install
 
@@ -59,9 +60,13 @@ cp -R apple-arabic-localization .agents/skills/
 iOS-dev-skills/
   apple-arabic-localization/
     SKILL.md                          # Skill definition (frontmatter + instructions)
+    scripts/
+      audit-localization.sh           # Static localization audit helper
+      check-localization-parity.py    # English/Arabic resource parity checker
     references/
       apple-localization-checklist.md # Implementation checklist
       rtl-review.md                   # RTL visual review guide
+      parity-checker-examples.md      # Example parity findings
       copy-guidelines.md              # Arabic/English copy rules
 ```
 
@@ -70,6 +75,7 @@ iOS-dev-skills/
 - "Localize this SwiftUI app to Arabic and English."
 - "Review all RTL issues in this iOS app."
 - "Run an English and Arabic RTL audit on this SwiftUI app."
+- "Check Arabic and English localization files for missing keys."
 - "Add in-app language switching for this Xcode project."
 - "Move all visible app strings into localization files."
 - "Prepare Arabic App Store copy for this app."
