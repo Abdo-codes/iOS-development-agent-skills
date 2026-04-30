@@ -7,6 +7,15 @@ description: This skill should be used when the user asks about "tvOS focus", "A
 
 tvOS focus is spatial — the engine casts a ray from the focused element and picks the nearest focusable rectangle in the swipe direction. This is the ONLY interaction model on Apple TV. No touch, no cursor.
 
+## Available Resources
+
+- `scripts/audit-tvos-focus.sh <repo-path>` — run first to find SwiftUI focus APIs, default chrome hotspots, invisible controls, Spacer gaps, ScrollView traps, directional command handlers, overlays, and focus restore code.
+- `references/full-guide.md` — complete tvOS focus guide with detailed examples and testing approaches.
+
+## Audit First
+
+Run `scripts/audit-tvos-focus.sh <repo-path>` before editing focus code. Treat the output as review leads, not automatic bugs. Prioritize matches in this order: invisible or clear interactive views, missing custom `ButtonStyle`, `Spacer()` gaps between interactive sections, ScrollViews without focus grouping, overlays without background disabling, and missing focus restore after dismissal.
+
 ## Gotchas (the stuff Claude gets wrong)
 
 These are real failures from production tvOS apps. Check these FIRST before writing focus code.
