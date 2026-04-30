@@ -14,10 +14,12 @@ This skill is for Xcode-based Apple apps only: SwiftUI, UIKit, app extensions, a
 ## Available Resources
 
 - `scripts/audit-localization.sh <repo-path>` — run first to find hard-coded locales, raw strings, notification copy, custom formatters, and RTL/LTR direction hotspots. Produces a structured report.
+- `scripts/check-localization-parity.py <repo-path>` — run after resource changes to compare English and Arabic `.strings`, `.stringsdict`, and `.xcstrings` keys, placeholders, empty values, untranslated values, and bidi risks.
 - `references/apple-localization-checklist.md` — end-to-end implementation checklist
 - `references/rtl-review.md` — Arabic/LTR visual audit, prioritization, and verification flow
 - `references/apple-rtl-principles.md` — Apple-authored RTL rules and what should or should not mirror
 - `references/copy-guidelines.md` — Arabic/English product copy and store copy rules
+- `references/parity-checker-examples.md` — examples of parity checker findings and how to interpret them
 
 ## When To Use
 
@@ -44,13 +46,16 @@ Do not use this skill for Android-only or web-only localization work.
 4. **Extract visible strings.**
    Move production-facing strings into the existing localization system (usually `Localizable.strings` or `.xcstrings`). Include views, reducers, notifications, seeded copy, errors, settings rows, and paywall/store messaging.
 
-5. **Wire the app root correctly.**
+5. **Check localization resource parity.**
+   Run `scripts/check-localization-parity.py <repo-path>` after changing localization resources. Fix missing keys and placeholder mismatches before visual review. Review warnings for untranslated Arabic, Arabic text in English resources, and Arabic strings that start with placeholders.
+
+6. **Wire the app root correctly.**
    Inject the active `Locale`, `Calendar`, and `layoutDirection` from the chosen language source. The root must react immediately to in-app language switches without requiring relaunch.
 
-6. **Refresh derived localized data on language change.**
+7. **Refresh derived localized data on language change.**
    Anything computed before the switch may need reload. Common misses: chart labels, seeded schedules, reminder text, cached summaries, tab labels created before the language changed.
 
-7. **Classify findings before fixing.**
+8. **Classify findings before fixing.**
    Split issues into:
    - shared primitives and design-system components
    - navigation and row affordances
@@ -59,7 +64,7 @@ Do not use this skill for Android-only or web-only localization work.
    - test coverage gaps
    Fix shared primitives first. Do not patch the same alignment bug independently across five screens if one shared row or field component is responsible.
 
-8. **Verify with focused tests and visual checks.**
+9. **Verify with focused tests and visual checks.**
    Add tests for formatting helpers, persistence, reducer actions, and reload behavior. Expand snapshot or visual coverage for both locales on the highest-traffic screens. Do final passes in both locales for navigation, sheets, forms, lists, tabs, progress bars, swipe actions, and dates/numbers.
 
 ## Gotchas
