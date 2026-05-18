@@ -77,3 +77,7 @@ iOS-dev-skills/
 ## Scope
 
 These skills are intended for Apple-platform projects, especially SwiftUI and UIKit apps managed in Xcode.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for skill quality guidelines, PR expectations, and the `skill-template/` starter.
