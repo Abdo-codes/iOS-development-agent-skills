@@ -16,10 +16,12 @@ from typing import Iterable
 ARABIC_RE = re.compile(r"[\u0600-\u06ff]")
 LATIN_RE = re.compile(r"[A-Za-z]")
 PLACEHOLDER_RE = re.compile(
-    r"%(?:\d+\$)?(?:[-+#0 ]*)?(?:\d+|\*)?(?:\.(?:\d+|\*))?[hlLzjtq]?[A-Za-z@]"
+    r"%#@[A-Za-z_][A-Za-z0-9_]*@"
+    r"|%(?:\d+\$)?(?:[-+#0 ]*)?(?:\d+|\*)?(?:\.(?:\d+|\*))?[hlLzjtq]?[A-Za-z@]"
     r"|\{[A-Za-z_][A-Za-z0-9_]*\}"
     r"|%\([A-Za-z_][A-Za-z0-9_]*\)[A-Za-z@]"
 )
+ESCAPE_RE = re.compile(r'\\(?:U(?:[0-9A-Fa-f]{8}|[0-9A-Fa-f]{4})|u[0-9A-Fa-f]{4}|["\\/bfnrt])')
 
 
 @dataclass(frozen=True)
@@ -27,6 +29,7 @@ class Entry:
     source: str
     key: str
     value: str
+    is_text: bool = True
 
 
 @dataclass(frozen=True)
@@ -40,10 +43,25 @@ class Finding:
 def decode_quoted(value: str) -> str:
     if "\\" not in value:
         return value
-    try:
-        return bytes(value, "utf-8").decode("unicode_escape")
-    except UnicodeDecodeError:
-        return value
+
+    escapes = {
+        '"': '"',
+        "\\": "\\",
+        "/": "/",
+        "b": "\b",
+        "f": "\f",
+        "n": "\n",
+        "r": "\r",
+        "t": "\t",
+    }
+
+    def decode_match(match: re.Match[str]) -> str:
+        escape = match.group(0)[1:]
+        if escape[0] in {"U", "u"}:
+            return chr(int(escape[1:], 16))
+        return escapes[escape]
+
+    return ESCAPE_RE.sub(decode_match, value)
 
 
 def parse_strings_file(path: Path) -> dict[str, Entry]:
@@ -75,7 +93,15 @@ def parse_stringsdict_file(path: Path) -> dict[str, Entry]:
     entries: dict[str, Entry] = {}
     if isinstance(data, dict):
         for key, value in data.items():
-            entries[str(key)] = Entry(str(path), str(key), json.dumps(value, sort_keys=True))
+            localized_format = (
+                value.get("NSStringLocalizedFormatKey", "") if isinstance(value, dict) else ""
+            )
+            contract = (
+                localized_format
+                if isinstance(localized_format, str)
+                else json.dumps(localized_format, sort_keys=True)
+            )
+            entries[str(key)] = Entry(str(path), str(key), contract, is_text=False)
     return entries
 
 
@@ -107,6 +133,7 @@ def parse_xcstrings_file(path: Path, locale: str) -> dict[str, Entry]:
         }
 
     strings = data.get("strings", {})
+    source_language = data.get("sourceLanguage")
     entries: dict[str, Entry] = {}
     if not isinstance(strings, dict):
         return entries
@@ -115,10 +142,12 @@ def parse_xcstrings_file(path: Path, locale: str) -> dict[str, Entry]:
         if not isinstance(payload, dict):
             continue
         localizations = payload.get("localizations", {})
-        if not isinstance(localizations, dict) or locale not in localizations:
+        if isinstance(localizations, dict) and locale in localizations:
+            value = "\n".join(xcstrings_values(localizations[locale]))
+        elif locale == source_language:
+            value = str(key)
+        else:
             continue
-        localized = localizations.get(locale, {})
-        value = "\n".join(xcstrings_values(localized))
         entries[str(key)] = Entry(f"{path}#{locale}", str(key), value)
     return entries
 
@@ -195,11 +224,16 @@ def compare_entries(
     for key in sorted(set(base_entries) & set(target_entries)):
         base_value = base_entries[key].value
         target_value = target_entries[key].value
+        is_text = base_entries[key].is_text and target_entries[key].is_text
 
         if not target_value.strip():
             findings.append(Finding("error", source, key, f"Empty {target_locale} value"))
 
-        if target_value.strip() and comparable_value(base_value) == comparable_value(target_value):
+        if (
+            is_text
+            and target_value.strip()
+            and comparable_value(base_value) == comparable_value(target_value)
+        ):
             findings.append(
                 Finding("warning", source, key, f"{target_locale} value matches {base_locale}")
             )
@@ -216,17 +250,22 @@ def compare_entries(
                 )
             )
 
-        if target_value.strip() and LATIN_RE.search(target_value) and not ARABIC_RE.search(target_value):
+        if (
+            is_text
+            and target_value.strip()
+            and LATIN_RE.search(target_value)
+            and not ARABIC_RE.search(target_value)
+        ):
             findings.append(
                 Finding("warning", source, key, f"{target_locale} value appears to be English")
             )
 
-        if ARABIC_RE.search(base_value):
+        if is_text and ARABIC_RE.search(base_value):
             findings.append(
                 Finding("warning", source, key, f"{base_locale} value contains Arabic text")
             )
 
-        if ARABIC_RE.search(target_value) and starts_with_placeholder(target_value):
+        if is_text and ARABIC_RE.search(target_value) and starts_with_placeholder(target_value):
             findings.append(
                 Finding(
                     "warning",
