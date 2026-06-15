@@ -45,7 +45,7 @@ rg -n 'Spacer\(\)' --type swift "$REPO" 2>/dev/null | head -80 || echo "  (none 
 echo ""
 
 echo "## 5. ScrollViews That May Trap Directional Input"
-rg -n 'ScrollView\(|LazyHStack|LazyVStack|\.scrollTarget|\.scrollPosition' \
+rg -n 'ScrollView\s*[\(\{]|LazyHStack|LazyVStack|\.scrollTarget|\.scrollPosition' \
   --type swift "$REPO" 2>/dev/null | head -120 || echo "  (none found)"
 echo ""
 
@@ -55,7 +55,7 @@ rg -n '\.onMoveCommand|\.onExitCommand|\.onPlayPauseCommand|MoveCommandDirection
 echo ""
 
 echo "## 7. Overlay And Modal Focus Capture"
-rg -n 'ZStack|overlay\(|fullScreenCover|sheet\(|popover\(|\.disabled\(|isPresented|isOverlay|showOverlay|dismiss' \
+rg -n 'ZStack|\.overlay\s*[\(\{]|fullScreenCover|sheet\(|popover\(|\.disabled\(|isPresented|isOverlay|showOverlay|dismiss' \
   --type swift "$REPO" 2>/dev/null | head -160 || echo "  (none found)"
 echo ""
 
