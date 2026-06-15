@@ -16,6 +16,16 @@ Run `scripts/audit-localization.sh <repo-path>` first. It searches for:
 
 Review the audit output before proceeding. Then manually check for anything the script misses: reducer-generated text, cached summaries, and tab labels built at startup.
 
+Run `scripts/check-localization-parity.py <repo-path>` after editing localization resources. It checks English/Arabic resource parity for:
+
+- missing keys between English and Arabic
+- placeholder mismatches like `%@`, `%d`, `%f`, and `{name}`
+- empty Arabic values
+- Arabic values that still match English
+- English-looking Arabic values
+- Arabic text accidentally present in English resources
+- Arabic strings that start with placeholders and may need bidi isolation marks
+
 ## 2. Source Of Truth
 
 Create or reuse one language model that can answer:
