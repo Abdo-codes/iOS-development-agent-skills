@@ -79,6 +79,21 @@ def parse_stringsdict_file(path: Path) -> dict[str, Entry]:
     return entries
 
 
+def xcstrings_values(payload: object) -> list[str]:
+    values: list[str] = []
+    if isinstance(payload, dict):
+        unit = payload.get("stringUnit")
+        if isinstance(unit, dict) and "value" in unit:
+            values.append(str(unit["value"]))
+        for key, value in payload.items():
+            if key != "stringUnit":
+                values.extend(xcstrings_values(value))
+    elif isinstance(payload, list):
+        for value in payload:
+            values.extend(xcstrings_values(value))
+    return values
+
+
 def parse_xcstrings_file(path: Path, locale: str) -> dict[str, Entry]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -103,11 +118,7 @@ def parse_xcstrings_file(path: Path, locale: str) -> dict[str, Entry]:
         if not isinstance(localizations, dict) or locale not in localizations:
             continue
         localized = localizations.get(locale, {})
-        value = ""
-        if isinstance(localized, dict):
-            unit = localized.get("stringUnit", {})
-            if isinstance(unit, dict):
-                value = str(unit.get("value", ""))
+        value = "\n".join(xcstrings_values(localized))
         entries[str(key)] = Entry(f"{path}#{locale}", str(key), value)
     return entries
 
@@ -162,6 +173,19 @@ def compare_entries(
 ) -> list[Finding]:
     findings: list[Finding] = []
 
+    parse_errors = [
+        entry
+        for entry in (
+            base_entries.get("__parse_error__"),
+            target_entries.get("__parse_error__"),
+        )
+        if entry is not None
+    ]
+    if parse_errors:
+        for entry in parse_errors:
+            findings.append(Finding("error", source, entry.key, entry.value))
+        return findings
+
     for key in sorted(set(base_entries) - set(target_entries)):
         findings.append(Finding("error", source, key, f"Missing {target_locale} key"))
 
@@ -171,10 +195,6 @@ def compare_entries(
     for key in sorted(set(base_entries) & set(target_entries)):
         base_value = base_entries[key].value
         target_value = target_entries[key].value
-
-        if key == "__parse_error__":
-            findings.append(Finding("error", source, key, target_value or base_value))
-            continue
 
         if not target_value.strip():
             findings.append(Finding("error", source, key, f"Empty {target_locale} value"))
