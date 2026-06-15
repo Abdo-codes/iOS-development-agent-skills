@@ -12,6 +12,16 @@ if ! command -v rg >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ ! -d "$REPO" ]; then
+  echo "error: repository path is not a directory: $REPO" >&2
+  exit 1
+fi
+
+if [ ! -r "$REPO" ]; then
+  echo "error: repository path is not readable: $REPO" >&2
+  exit 1
+fi
+
 echo "=== tvOS Focus Audit: $REPO ==="
 echo ""
 
