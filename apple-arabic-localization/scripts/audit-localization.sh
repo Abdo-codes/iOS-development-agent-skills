@@ -3,6 +3,8 @@
 # Usage: audit-localization.sh [path-to-repo]
 # Outputs a structured report of findings grouped by category.
 
+set -o pipefail
+
 REPO="${1:-.}"
 
 echo "=== Localization Audit: $REPO ==="
@@ -28,34 +30,44 @@ rg -n 'DateFormatter\(\)|NumberFormatter\(\)|\.dateFormat\s*=|\.numberStyle\s*='
   --type swift "$REPO" 2>/dev/null || echo "  (none found)"
 echo ""
 
-echo "## 5. RTL/LTR Direction Hotspots To Review (not always bugs)"
+echo "## 5. Active Language Source / In-App Switch Hotspots"
+rg -n '@AppStorage|UserDefaults|Bundle\.main|Bundle\(path:|Locale\.current|Locale\.autoupdatingCurrent|AppleLanguages|languageCode|selectedLanguage|appLanguage|currentLanguage|setLanguage|changeLanguage' \
+  --type swift "$REPO" 2>/dev/null | head -120 || echo "  (none found)"
+echo ""
+
+echo "## 6. RTL/LTR Direction Hotspots To Review (not always bugs)"
 rg -n '\.(leading|trailing)\b|alignment:\s*\.(leading|trailing)|edge:\s*\.(leading|trailing)|move\(edge:\s*\.(leading|trailing)|swipeActions\(edge:\s*\.(leading|trailing)|chevron\.(forward|backward|left|right)' \
   --type swift "$REPO" 2>/dev/null | head -120 || echo "  (none found)"
 echo ""
 
-echo "## 6. Physical Left/Right Hardcoding"
+echo "## 7. Physical Left/Right Hardcoding"
 rg -n '\.frame.*alignment:\s*\.(left|right)|HStack.*alignment:\s*\.(left|right)|padding\(\.(left|right)|chevron\.(left|right)' \
   --type swift "$REPO" 2>/dev/null || echo "  (none found)"
 echo ""
 
-echo "## 7. Seeded / Hardcoded User-Facing Data"
+echo "## 8. Seeded / Hardcoded User-Facing Data"
 rg -n 'seed|defaultData|sampleData|placeholder.*=.*"[A-Z]' \
   --type swift "$REPO" 2>/dev/null | head -20 || echo "  (none found)"
 echo ""
 
-echo "## 8. String Interpolation in Localized Strings (bidi risk)"
+echo "## 9. String Interpolation in Localized Strings (bidi risk)"
 rg -n '\\(.*\)|%@|%d|%f' --type swift "$REPO" 2>/dev/null \
   | rg -v 'print\(|log\.|Log\.|debug\(|#if' | head -20 || echo "  (none found)"
 echo ""
 
-echo "## 9. Custom Images That May Need RTL Flipping"
+echo "## 10. Custom Images That May Need RTL Flipping"
 rg -n 'UIImage\(named:|Image\("|\.renderingMode|flipsForRightToLeftLayoutDirection|imageFlipsForRightToLeftLayoutDirection' --type swift "$REPO" 2>/dev/null \
   | rg -v 'SF|systemName|symbol' | head -20 || echo "  (none found)"
 echo ""
 
-echo "## 10. Localization Files Found"
-find "$REPO" \( -name '*.strings' -o -name '*.xcstrings' -o -name '*.stringsdict' \) \
-  -not -path '*/.*' 2>/dev/null || echo "  (none found)"
+echo "## 11. Localization Files Found"
+LOCALIZATION_FILES="$(find "$REPO" \( -name '*.strings' -o -name '*.xcstrings' -o -name '*.stringsdict' \) \
+  -not -path '*/.*' 2>/dev/null)"
+if [ -n "$LOCALIZATION_FILES" ]; then
+  echo "$LOCALIZATION_FILES"
+else
+  echo "  (none found)"
+fi
 echo ""
 
 echo "=== End Audit ==="
